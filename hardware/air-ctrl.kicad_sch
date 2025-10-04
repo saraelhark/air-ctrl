@@ -2,9 +2,219 @@
 	(version 20250114)
 	(generator "eeschema")
 	(generator_version "9.0")
-	(uuid 0ac49f41-390f-45da-b336-186a486bd4d5)
+	(uuid "0ac49f41-390f-45da-b336-186a486bd4d5")
 	(paper "A4")
 	(lib_symbols)
+	(sheet
+		(at 119.38 46.99)
+		(size 40.64 58.42)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "1bbfc266-7a13-4dd4-be44-db318575809d")
+		(property "Sheetname" "mcu"
+			(at 119.38 46.2784 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "mcu.kicad_sch"
+			(at 119.38 105.9946 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "air-ctrl"
+				(path "/0ac49f41-390f-45da-b336-186a486bd4d5"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 194.31 57.15)
+		(size 27.94 54.61)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "4fb608f5-b95a-4746-b766-66c68a4f5c7d")
+		(property "Sheetname" "power"
+			(at 194.31 56.4384 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power.kicad_sch"
+			(at 194.31 112.3446 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "air-ctrl"
+				(path "/0ac49f41-390f-45da-b336-186a486bd4d5"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 35.56 114.3)
+		(size 40.64 34.29)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "54858e69-cc47-4c61-af10-9f8f625aa872")
+		(property "Sheetname" "display"
+			(at 35.56 113.5884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "display.kicad_sch"
+			(at 35.56 149.1746 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "air-ctrl"
+				(path "/0ac49f41-390f-45da-b336-186a486bd4d5"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 237.49 57.15)
+		(size 20.32 53.34)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "8ae8a0cb-512d-4b29-9087-a8af55e6bce9")
+		(property "Sheetname" "connectors"
+			(at 237.49 56.4384 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "connectors.kicad_sch"
+			(at 237.49 111.0746 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "air-ctrl"
+				(path "/0ac49f41-390f-45da-b336-186a486bd4d5"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 36.83 52.07)
+		(size 38.1 34.29)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "b7a9059e-d00a-4e2c-9f59-5ed1aaa9c44c")
+		(property "Sheetname" "sensor"
+			(at 36.83 51.3584 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "sensor.kicad_sch"
+			(at 36.83 86.9446 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "air-ctrl"
+				(path "/0ac49f41-390f-45da-b336-186a486bd4d5"
+					(page "5")
+				)
+			)
+		)
+	)
 	(sheet_instances
 		(path "/"
 			(page "1")
