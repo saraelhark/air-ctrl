@@ -225,6 +225,36 @@
 				(justify left top)
 			)
 		)
+		(pin "VDD_3V3" input
+			(at 74.93 57.15 0)
+			(uuid "d1bdaa53-7ab3-46df-b516-c9e026e244a4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "I2C_SDA" input
+			(at 74.93 67.31 0)
+			(uuid "dc9d742d-ee78-45c1-8521-084aa062e068")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "I2C_SCL" input
+			(at 74.93 72.39 0)
+			(uuid "d35905f8-cde9-42aa-b481-adfbcdf46d81")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
 		(instances
 			(project "air-ctrl"
 				(path "/0ac49f41-390f-45da-b336-186a486bd4d5"
