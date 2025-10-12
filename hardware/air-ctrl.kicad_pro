@@ -52,7 +52,24 @@
         }
       },
       "diff_pair_dimensions": [],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "hole_clearance|178025000|50400000|b601086b-00b2-43fa-8b34-35c769af4fd8|2326b94e-df28-44f2-a882-0803a00bd3c4",
+          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
+        ],
+        [
+          "hole_clearance|178025000|50400000|b601086b-00b2-43fa-8b34-35c769af4fd8|700ed7fa-c5e3-42f0-8f7a-9efbbc0845f4",
+          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
+        ],
+        [
+          "hole_clearance|178025000|56500000|e884e4bc-6c24-46d6-b191-b730ee6b4784|42221887-e15f-461c-a01a-ae3eb454ae8e",
+          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
+        ],
+        [
+          "hole_clearance|178025000|56500000|e884e4bc-6c24-46d6-b191-b730ee6b4784|a7ecea2e-e36c-4dc9-b4f8-6745235f1ab0",
+          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
+        ]
+      ],
       "meta": {
         "version": 2
       },
