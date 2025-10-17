@@ -38,8 +38,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 0.0,
-          "height": 0.95,
-          "width": 0.9
+          "height": 0.254,
+          "width": 0.254
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -48,28 +48,17 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.5
+          "min_clearance": 0.0
         }
       },
-      "diff_pair_dimensions": [],
-      "drc_exclusions": [
-        [
-          "hole_clearance|178025000|50400000|b601086b-00b2-43fa-8b34-35c769af4fd8|2326b94e-df28-44f2-a882-0803a00bd3c4",
-          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
-        ],
-        [
-          "hole_clearance|178025000|50400000|b601086b-00b2-43fa-8b34-35c769af4fd8|700ed7fa-c5e3-42f0-8f7a-9efbbc0845f4",
-          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
-        ],
-        [
-          "hole_clearance|178025000|56500000|e884e4bc-6c24-46d6-b191-b730ee6b4784|42221887-e15f-461c-a01a-ae3eb454ae8e",
-          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
-        ],
-        [
-          "hole_clearance|178025000|56500000|e884e4bc-6c24-46d6-b191-b730ee6b4784|a7ecea2e-e36c-4dc9-b4f8-6745235f1ab0",
-          "JLCPCB should be able to handle this, can't edit the footprint of the connector"
-        ]
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
       ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -138,7 +127,7 @@
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
-        "min_hole_clearance": 0.25,
+        "min_hole_clearance": 0.19,
         "min_hole_to_hole": 0.25,
         "min_microvia_diameter": 0.2,
         "min_microvia_drill": 0.1,
@@ -197,7 +186,9 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -224,7 +215,12 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -475,7 +471,7 @@
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.2,
+        "clearance": 0.1,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
