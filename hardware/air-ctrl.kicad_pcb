@@ -6576,7 +6576,7 @@
 		(pad "1" connect roundrect
 			(at -4.709896 1.79 180)
 			(size 0.377 0.254)
-			(layers "F.Cu" "F.Mask")
+			(layers "F.Cu")
 			(roundrect_rratio 0.15)
 			(net 1 "Net-(AE1-FEED)")
 			(pinfunction "FEED")
