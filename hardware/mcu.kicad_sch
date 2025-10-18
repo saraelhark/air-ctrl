@@ -4,6 +4,11 @@
 	(generator_version "9.0")
 	(uuid "b1a96ee2-a963-460e-8ab6-349003ebb7c0")
 	(paper "A4")
+	(title_block
+		(title "air-ctrl")
+		(date "2025-10-18")
+		(rev "1.1")
+	)
 	(lib_symbols
 		(symbol "Connector:Conn_ARM_SWD_TagConnect_TC2030-NL"
 			(exclude_from_sim no)

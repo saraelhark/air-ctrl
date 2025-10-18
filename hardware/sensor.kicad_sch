@@ -4,6 +4,11 @@
 	(generator_version "9.0")
 	(uuid "724f5f8e-b20a-419a-ad3a-1d127ef64586")
 	(paper "A4")
+	(title_block
+		(title "air-ctrl")
+		(date "2025-10-18")
+		(rev "1.1")
+	)
 	(lib_symbols
 		(symbol "BME688:BME688"
 			(pin_names

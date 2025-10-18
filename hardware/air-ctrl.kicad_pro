@@ -692,5 +692,7 @@
       "display"
     ]
   ],
-  "text_variables": {}
+  "text_variables": {
+    "NAME": "air-ctrl"
+  }
 }

@@ -4,6 +4,11 @@
 	(generator_version "9.0")
 	(uuid "f8eb81b2-a975-4c11-8edd-37352098901f")
 	(paper "A4")
+	(title_block
+		(title "air-ctrl")
+		(date "2025-10-18")
+		(rev "1.1")
+	)
 	(lib_symbols
 		(symbol "Battery_Management:MCP73871-2CC"
 			(exclude_from_sim no)
@@ -2906,6 +2911,12 @@
 		(uuid "bfc99708-fd3d-4595-b437-4837285a2558")
 	)
 	(junction
+		(at 203.2 142.24)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c20c9d5f-21a5-454c-afb1-3fda541716bc")
+	)
+	(junction
 		(at 233.68 45.72)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3217,6 +3228,16 @@
 	)
 	(wire
 		(pts
+			(xy 203.2 142.24) (xy 165.1 142.24)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5298d713-e589-4d4a-b3ce-47f5f8e9f7de")
+	)
+	(wire
+		(pts
 			(xy 160.02 142.24) (xy 165.1 142.24)
 		)
 		(stroke
@@ -3277,7 +3298,7 @@
 	)
 	(wire
 		(pts
-			(xy 213.36 142.24) (xy 165.1 142.24)
+			(xy 213.36 142.24) (xy 203.2 142.24)
 		)
 		(stroke
 			(width 0)
@@ -5809,6 +5830,73 @@
 			(project ""
 				(path "/0ac49f41-390f-45da-b336-186a486bd4d5/4fb608f5-b95a-4746-b766-66c68a4f5c7d"
 					(reference "J4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 203.2 142.24 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "ad50d48c-6eed-4b28-9dfb-1d56749c5eaf")
+		(property "Reference" "TP9"
+			(at 205.74 144.2719 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "TP_GND"
+			(at 205.74 146.8119 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm"
+			(at 198.12 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 198.12 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "test point"
+			(at 203.2 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ddaa2310-6317-402f-9554-71cb3eed5632")
+		)
+		(instances
+			(project ""
+				(path "/0ac49f41-390f-45da-b336-186a486bd4d5/4fb608f5-b95a-4746-b766-66c68a4f5c7d"
+					(reference "TP9")
 					(unit 1)
 				)
 			)
