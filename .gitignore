@@ -40,3 +40,13 @@ fp-info-cache
 *.kicad_prl
 .DS_Store
 hardware/production/*
+
+# Zephyr
+firmware/build/
+firmware/.west/
+firmware/bootloader/
+firmware/modules/
+firmware/tools/
+firmware/zephyr/
+firmware/.cache/
+firmware/compile_commands.json

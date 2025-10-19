@@ -1,0 +1,2 @@
+config BOARD_AIR_CTRL
+	select SOC_NRF52832_QFAA

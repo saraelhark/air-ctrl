@@ -1,0 +1,9 @@
+identifier: air_ctrl/nrf52832
+name: Air Quality wearable
+type: mcu
+arch: arm
+ram: 64
+flash: 512
+toolchain:
+  - zephyr
+supported: []

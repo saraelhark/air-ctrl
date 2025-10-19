@@ -1,0 +1,4 @@
+board:
+  name: air_ctrl
+  socs:
+    - name: nrf52832
