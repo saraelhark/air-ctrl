@@ -4,12 +4,20 @@
 
 / {
 	model = "Air Quality wearable";
-	compatible = "saraelhark,air_ctrl";
+	compatible = "air_ctrl";
 
 	chosen {
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+		backlight: pwm_led_0 {
+			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+			label = "Display Backlight";
+		};
 	};
 };
 
@@ -21,22 +29,50 @@
 
 		boot_partition: partition@0 {
 			label = "mcuboot";
-			reg = <0x00000000 DT_SIZE_K(48)>;
+			reg = <0x00000000 0xc000>;
 		};
 
 		slot0_partition: partition@c000 {
 			label = "image-0";
-			reg = <0x0000c000 DT_SIZE_K(220)>;
+			reg = <0x0000C000 0x37000>;
 		};
 
 		slot1_partition: partition@43000 {
 			label = "image-1";
-			reg = <0x00043000 DT_SIZE_K(220)>;
+			reg = <0x00043000 0x37000>;
 		};
 
 		storage_partition: partition@7a000 {
 			label = "storage";
-			reg = <0x0007a000 DT_SIZE_K(24)>;
+			reg = <0x0007a000 0x00006000>;
 		};
 	};
+};
+
+&i2c0 {
+	status = "okay";
+	pinctrl-0 = <&i2c0_default>;
+	pinctrl-1 = <&i2c0_sleep>;
+	pinctrl-names = "default", "sleep";
+
+	bme688: bme688@76 {
+		compatible = "bosch,bme680";
+		reg = <0x76>;
+		label = "BME688";
+	};
+};
+
+&spi0 {
+	compatible = "nordic,nrf-spi";
+	status = "okay";
+	pinctrl-0 = <&spi0_default>;
+	pinctrl-1 = <&spi0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
 };
