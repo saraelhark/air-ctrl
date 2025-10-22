@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "air-ctrl")
-		(date "2025-10-18")
-		(rev "1.1")
+		(date "2025-10-22")
+		(rev "1.2")
 	)
 	(lib_symbols
 		(symbol "Connector:Conn_ARM_SWD_TagConnect_TC2030-NL"
