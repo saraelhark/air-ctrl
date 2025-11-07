@@ -49,6 +49,10 @@
 	};
 };
 
+&gpiote {
+    status = "okay";
+};
+
 &i2c0 {
 	status = "okay";
 	pinctrl-0 = <&i2c0_default>;
@@ -62,11 +66,10 @@
 	};
 };
 
-&spi0 {
-	compatible = "nordic,nrf-spi";
-	status = "okay";
-	pinctrl-0 = <&spi0_default>;
-	pinctrl-1 = <&spi0_sleep>;
+&spi1 {
+    status = "okay";
+    pinctrl-0 = <&spi1_default>;
+    pinctrl-1 = <&spi1_sleep>;
 	pinctrl-names = "default", "sleep";
 };
 
