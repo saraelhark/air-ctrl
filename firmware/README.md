@@ -35,11 +35,21 @@ west build -b air_ctrl --pristine
 ## Flash
 
 Note: to use a nRF52 DK as flashing device:
+
 - Connect the tag-connect 10-pin interface to P19 on the nRF52 DK (this somehow makes it ignore the chip on the DK)
-- Connect the GND of the DK to the GND of the custom board (maybe not needed, just precaution)
 - Then connect the DK's USB interface to your computer and the tag-connect to the custom baord, then run the flashing command
 - To check that actually flashed to the custom board disconnect the tag-connect from the custom board and run the flash command again, you should get an error (something about cannot find device)
 
 ```bash
 west flash
 ```
+
+## Features to test to validate hardware
+
+- [x] Power from 5V USB c to 3.3V
+- [x] MCU flashing and running
+- [x] BME688 sensor via i2c
+- [x] BLE and antenna
+- [ ] display comms via SPI
+- [ ] power from 3.7 battery
+- [ ] charge battery from USB c
