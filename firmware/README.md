@@ -51,5 +51,5 @@ west flash
 - [x] BME688 sensor via i2c
 - [x] BLE and antenna
 - [ ] display comms via SPI
-- [ ] power from 3.7 battery
+- [ ] power from 3.7 battery (need connector and battery)
 - [ ] charge battery from USB c
