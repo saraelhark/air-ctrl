@@ -53,3 +53,13 @@ west flash
 - [ ] display comms via SPI
 - [ ] power from 3.7 battery (need connector and battery)
 - [ ] charge battery from USB c
+
+### Display Pinout (ST7789V 240x240)
+
+**Pin mapping:**
+- P0.10 - DISP_BACKLIGHT (PWM, active high)
+- P0.11 - DISP_RST (active low - idle high, pull low to reset)
+- P0.12 - DISP_CS (Chip Select, active low)
+- P0.13 - DISP_SCLK (SPI clock)
+- P0.14 - DISP_MOSI (SPI data)
+- P0.15 - DISP_DC (Data/Command select - low=command, high=data)
