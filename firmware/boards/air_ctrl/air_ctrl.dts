@@ -25,8 +25,8 @@
 	mipi_dbi {
 		compatible = "zephyr,mipi-dbi-spi";
 		spi-dev = <&spi1>;
-		dc-gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
-		reset-gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+		dc-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
 		write-only;
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -34,17 +34,19 @@
 		st7789v: st7789v@0 {
 			compatible = "sitronix,st7789v";
             reg = <0>;
-            mipi-max-frequency = <8000000>;
+            mipi-max-frequency = <4000000>;
             mipi-mode = "MIPI_DBI_MODE_SPI_4WIRE";
             width = <240>;
             height = <240>;
             x-offset = <0>;
             y-offset = <0>;
+			ready-time-ms = <100>;
+ 			inversion-off;
             vcom = <0x19>;
             gctrl = <0x35>;
             vrhs = <0x12>;
             vdvs = <0x20>;
-            mdac = <0x00>;
+            mdac = <0xC0>;
             gamma = <0x01>;
             colmod = <0x05>;
             lcm = <0x2c>;
@@ -119,7 +121,8 @@
 };
 
 &pwm0 {
-	status = "okay";
+	/* DISABLED: Pin conflict with backlight GPIO on P0.10 */
+	status = "disabled";
 	pinctrl-0 = <&pwm0_default>;
 	pinctrl-1 = <&pwm0_sleep>;
 	pinctrl-names = "default", "sleep";
