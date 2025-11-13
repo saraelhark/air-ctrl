@@ -29,60 +29,66 @@ static const struct gpio_dt_spec backlight = GPIO_DT_SPEC_GET(BACKLIGHT_NODE, gp
 
 static int display_test_fill(void)
 {
+    int err;
+
+    /* Check if display device is ready */
     if (!device_is_ready(display)) {
         LOG_ERR("Display device not ready");
         return -ENODEV;
     }
 
+    /* Turn on backlight - set to ACTIVE */
     if (device_is_ready(backlight.port)) {
-        int err = gpio_pin_configure_dt(&backlight, GPIO_OUTPUT_ACTIVE);
+        err = gpio_pin_configure_dt(&backlight, GPIO_OUTPUT_ACTIVE);
         if (err) {
             LOG_ERR("Back-light GPIO config failed (%d)", err);
+            return err;
         }
-
     } else {
         LOG_WRN("Backlight GPIO not ready");
     }
 
-    int err = display_blanking_off(display);
-    if (err) {
-        LOG_ERR("Failed to disable display blanking (%d)", err);
-        return err;
-    }
-
+    /* Get display capabilities */
     struct display_capabilities caps;
     display_get_capabilities(display, &caps);
+    
+    LOG_INF("Display: %dx%d, pixel format: 0x%x", 
+            caps.x_resolution, caps.y_resolution, 
+            caps.current_pixel_format);
 
+    /* Verify RGB565 support */
     if (!(caps.supported_pixel_formats & PIXEL_FORMAT_RGB_565)) {
         LOG_ERR("Display lacks RGB565 support (mask 0x%08x)",
                 caps.supported_pixel_formats);
         return -ENOTSUP;
     }
 
-    if (caps.current_pixel_format != PIXEL_FORMAT_RGB_565) {
-        err = display_set_pixel_format(display, PIXEL_FORMAT_RGB_565);
-        if (err) {
-            LOG_ERR("Failed to set RGB565 pixel format (%d)", err);
-            return err;
-        }
-
-        display_get_capabilities(display, &caps);
+    /* Turn off blanking to make display visible */
+    err = display_blanking_off(display);
+    if (err) {
+        LOG_ERR("Failed to turn off blanking (%d)", err);
+        return err;
     }
 
+    /* Fill entire screen with GREEN */
+    static uint16_t line_buf[240];
+    const uint16_t green = 0x07E0; /* RGB565 green: 5 bits red (0), 6 bits green (all set), 5 bits blue (0) */
+    
+    /* Fill line buffer with green */
+    for (int i = 0; i < 240; i++) {
+        line_buf[i] = green;
+    }
+    
     struct display_buffer_descriptor desc = {
         .width = caps.x_resolution,
         .height = 1,
         .pitch = caps.x_resolution,
         .buf_size = caps.x_resolution * sizeof(uint16_t),
     };
-
-    static uint16_t line_buf[DT_PROP(DISPLAY_NODE, width)];
-    const uint16_t color = 0xF800; /* RGB565 red */
-
-    for (size_t x = 0; x < desc.width && x < ARRAY_SIZE(line_buf); x++) {
-        line_buf[x] = color;
-    }
-
+    
+    LOG_INF("Filling entire %dx%d display with GREEN...", caps.x_resolution, caps.y_resolution);
+    
+    /* Fill entire screen line by line */
     for (uint16_t y = 0; y < caps.y_resolution; y++) {
         err = display_write(display, 0, y, &desc, (uint8_t *)line_buf);
         if (err) {
@@ -90,7 +96,8 @@ static int display_test_fill(void)
             return err;
         }
     }
-
+    
+    LOG_INF("Screen should be completely GREEN now!");
     return 0;
 }
 
@@ -154,6 +161,8 @@ int main(void)
 		LOG_ERR("BME688 not ready");
 		return 0;
 	}
+
+    k_sleep(K_SECONDS(10));
 
 	err = display_test_fill();
 	if (err) {
