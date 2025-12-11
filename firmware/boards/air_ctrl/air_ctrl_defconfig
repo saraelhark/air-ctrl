@@ -9,7 +9,6 @@ CONFIG_BME680=y
 
 # SPI for ST7789 display
 #CONFIG_SPI=y # this breaks the build
-CONFIG_NRFX_SPIM1=y
 
 # PWM for display backlight
 # CONFIG_PWM=y

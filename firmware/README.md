@@ -50,13 +50,14 @@ west flash
 - [x] MCU flashing and running
 - [x] BME688 sensor via i2c
 - [x] BLE and antenna
-- [ ] display comms via SPI
+- [ ] display comms via SPI (not included in current firmware iteration)
 - [ ] power from 3.7 battery (need connector and battery)
 - [ ] charge battery from USB c
 
 ### Display Pinout (ST7789V 240x240)
 
 **Pin mapping:**
+
 - P0.10 - DISP_BACKLIGHT (PWM, active high)
 - P0.11 - DISP_RST (active low - idle high, pull low to reset)
 - P0.12 - DISP_CS (Chip Select, active low)

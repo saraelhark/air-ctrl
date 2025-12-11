@@ -1,7 +1,6 @@
 /dts-v1/;
 #include <nordic/nrf52832_qfaa.dtsi>
 #include "air_ctrl-pinctrl.dtsi"
-#include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>
 
 / {
 	model = "Air Quality wearable";
@@ -11,53 +10,6 @@
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
-		zephyr,display = &st7789v;
-	};
-
-	leds {
-		compatible = "gpio-leds";
-		backlight: backlight {
-			gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>;
-			label = "Display Backlight";
-		};
-	};
-
-	mipi_dbi {
-		compatible = "zephyr,mipi-dbi-spi";
-		spi-dev = <&spi1>;
-		dc-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
-		reset-gpios = <&gpio0 11 GPIO_ACTIVE_LOW>;
-		write-only;
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		st7789v: st7789v@0 {
-			compatible = "sitronix,st7789v";
-            reg = <0>;
-            mipi-max-frequency = <4000000>;
-            mipi-mode = "MIPI_DBI_MODE_SPI_4WIRE";
-            width = <240>;
-            height = <240>;
-            x-offset = <0>;
-            y-offset = <0>;
-			ready-time-ms = <100>;
- 			inversion-off;
-            vcom = <0x19>;
-            gctrl = <0x35>;
-            vrhs = <0x12>;
-            vdvs = <0x20>;
-            mdac = <0xC0>;
-            gamma = <0x01>;
-            colmod = <0x05>;
-            lcm = <0x2c>;
-            porch-param = [0c 0c 00 33 33];
-            cmd2en-param = [5a 69 02 01];
-            pwctrl1-param = [a4 a1];
-            pvgam-param = [D0 04 0D 11 13 2B 3F 54 4C 18 0D 0B 1F 23];
-            nvgam-param = [D0 04 0C 11 13 2C 3F 44 51 2F 1F 1F 20 23];
-            ram-param = [00 F0];
-            rgb-param = [CD 08 14];
-		};
 	};
 };
 
@@ -111,13 +63,7 @@
 };
 
 &spi1 {
-	#address-cells = <1>;
-	#size-cells = <0>;
-    status = "okay";
-    pinctrl-0 = <&spi1_default>;
-    pinctrl-1 = <&spi1_sleep>;
-	cs-gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
-	pinctrl-names = "default", "sleep";
+	status = "disabled";
 };
 
 &pwm0 {
