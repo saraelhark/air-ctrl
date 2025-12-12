@@ -53,3 +53,5 @@ firmware/.cache/
 firmware/compile_commands.json
 
 .vscode
+firmware/notes.md
+firmware/ext/*
