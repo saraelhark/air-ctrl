@@ -1,102 +1,93 @@
 #include <zephyr/kernel.h>
-#include <zephyr/device.h>
-#include <zephyr/devicetree.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/drivers/sensor.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/settings/settings.h>
-#include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/hci.h>
-#include <zephyr/bluetooth/conn.h>
-#include <zephyr/bluetooth/uuid.h>
-#include <zephyr/bluetooth/gatt.h>
+#include <zephyr/sys/util.h>
+
+#include "air_ctrl_sensor.h"
+#include "air_ctrl_bt.h"
 
 LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
-const struct device *const bme = DEVICE_DT_GET_ONE(bosch_bme680);
-
-static const struct bt_data ad[] = {
-	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-	BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
-};
-
-static void connected(struct bt_conn *conn, uint8_t err)
+#if IS_ENABLED(CONFIG_AIR_CTRL_USE_BSEC)
+static void print_iaq_accuracy(uint8_t accuracy)
 {
-	if (err) {
-		printk("Connection failed err 0x%02x %s\n", err, bt_hci_err_to_str(err));
-	} else {
-		printk("Connected\n");
+	const char *acc_str;
+	switch (accuracy) {
+	case 0: acc_str = "Stabilizing"; break;
+	case 1: acc_str = "Low"; break;
+	case 2: acc_str = "Medium"; break;
+	case 3: acc_str = "High"; break;
+	default: acc_str = "Unknown"; break;
 	}
+	LOG_INF("  IAQ Accuracy: %s (%d)", acc_str, accuracy);
 }
-
-static void disconnected(struct bt_conn *conn, uint8_t reason)
-{
-	printk("Disconnected, reason 0x%02x %s\n", reason, bt_hci_err_to_str(reason));
-}
-
-BT_CONN_CB_DEFINE(conn_callbacks) = {
-	.connected = connected,
-	.disconnected = disconnected
-};
-
-static void bt_ready(void)
-{
-	int err;
-
-	printk("Bluetooth initialized\n");
-
-	if (IS_ENABLED(CONFIG_SETTINGS)) {
-		settings_load();
-	}
-
-	err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, ad, ARRAY_SIZE(ad), NULL, 0);
-
-	if (err) {
-		printk("Advertising failed to start (err %d)\n", err);
-	} else {
-		printk("Advertising successfully started\n");
-	}
-}
+#endif
 
 int main(void)
 {
 	int err;
+	air_ctrl_sensor_data_t sensor_data;
 
-	err = bt_enable(NULL);
+	err = air_ctrl_bt_init();
 	if (err) {
-		printk("Bluetooth init failed (err %d)\n", err);
-		return 0;
-	}
-
-	bt_ready();
-
-	/* Check BME688 sensor */
-	if (!device_is_ready(bme)) {
-		LOG_ERR("BME688 not ready");
-		return 0;
+		LOG_ERR("Bluetooth init failed: %d", err);
 	}
 
 	LOG_INF("Air-ctrl device starting...");
 
-    while (true) {
-        struct sensor_value temp, pressure, humidity, gas;
+	err = air_ctrl_sensor_init();
+	if (err != 0) {
+		LOG_ERR("Sensor integration init failed: %d", err);
+		return 0;
+	}
 
-        if (sensor_sample_fetch(bme) < 0) {
-            LOG_ERR("Sample fetch failed");
-        } else if (
-            sensor_channel_get(bme, SENSOR_CHAN_AMBIENT_TEMP, &temp) ||
-            sensor_channel_get(bme, SENSOR_CHAN_PRESS, &pressure) ||
-            sensor_channel_get(bme, SENSOR_CHAN_HUMIDITY, &humidity) ||
-            sensor_channel_get(bme, SENSOR_CHAN_GAS_RES, &gas)) {
-            LOG_ERR("Channel read failed");
-        } else {
-            LOG_INF("T=%.2f°C P=%.2fkPa RH=%.1f%% Gas=%dΩ",
-                    sensor_value_to_double(&temp),
-                    sensor_value_to_double(&pressure) / 1000.0,
-                    sensor_value_to_double(&humidity),
-                    gas.val1);
-        }
+	#if IS_ENABLED(CONFIG_AIR_CTRL_USE_BSEC)
+	LOG_INF("BSEC initialized, starting sensor loop...");
+	LOG_INF("Note: IAQ accuracy will improve over time (needs ~5 min warm-up)");
+	#else
+	LOG_INF("Raw sensor mode initialized, starting sensor loop...");
+	#endif
 
-        k_sleep(K_SECONDS(2));
-    }
+	while (true) {
+		if (air_ctrl_sensor_run(&sensor_data)) {
+			#if IS_ENABLED(CONFIG_AIR_CTRL_USE_BSEC)
+			LOG_INF("=== BME688 BSEC Data ===");
+			
+			LOG_INF("  Temperature: %.2f °C (raw: %.2f °C)",
+				sensor_data.temperature,
+				sensor_data.raw_temperature);
+			LOG_INF("  Humidity: %.2f %%RH (raw: %.2f %%RH)",
+				sensor_data.humidity,
+				sensor_data.raw_humidity);
+			
+			LOG_INF("  Pressure: %.2f hPa",
+				sensor_data.raw_pressure / 100.0);
+			
+			LOG_INF("  Gas Resistance: %.0f Ohm",
+				sensor_data.raw_gas_resistance);
+			
+			LOG_INF("  IAQ: %.1f", sensor_data.iaq);
+			print_iaq_accuracy(sensor_data.iaq_accuracy);
+			LOG_INF("  Static IAQ: %.1f", sensor_data.static_iaq);
+			
+			LOG_INF("  CO2 Equivalent: %.0f ppm",
+				sensor_data.co2_equivalent);
+			LOG_INF("  Breath VOC: %.3f ppm",
+				sensor_data.breath_voc_equivalent);
+			LOG_INF("  Gas Percentage: %.1f %%",
+				sensor_data.gas_percentage);
+			
+			LOG_INF("  Stabilization: %s, Run-in: %s",
+				sensor_data.stabilization_status > 0.5f ? "Done" : "Ongoing",
+				sensor_data.run_in_status > 0.5f ? "Done" : "Ongoing");
+			#else
+			LOG_INF("=== BME688 Raw Data ===");
+			LOG_INF("  Temperature: %.2f °C", sensor_data.raw_temperature);
+			LOG_INF("  Humidity: %.2f %%RH", sensor_data.raw_humidity);
+			LOG_INF("  Pressure: %.2f hPa", sensor_data.raw_pressure / 100.0);
+			LOG_INF("  Gas Resistance: %.0f Ohm", sensor_data.raw_gas_resistance);
+			#endif
+		}
+
+		k_sleep(K_MSEC(100));
+	}
 }

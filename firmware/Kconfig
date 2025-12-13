@@ -1,0 +1,9 @@
+source "Kconfig.zephyr"
+
+menu "Air Ctrl"
+
+config AIR_CTRL_USE_BSEC
+	bool "Use Bosch BSEC library"
+	default n
+
+endmenu

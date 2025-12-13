@@ -41,17 +41,4 @@ fp-info-cache
 .DS_Store
 hardware/production/*
 
-# Zephyr
-firmware/build/
-firmware/build_1/
-firmware/.west/
-firmware/bootloader/
-firmware/modules/
-firmware/tools/
-firmware/zephyr/
-firmware/.cache/
-firmware/compile_commands.json
-
 .vscode
-firmware/notes.md
-firmware/ext/*

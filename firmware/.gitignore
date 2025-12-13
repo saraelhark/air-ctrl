@@ -1,0 +1,14 @@
+# Zephyr
+build/
+build_1/
+.west/
+bootloader/
+modules/
+tools/
+zephyr/
+.cache/
+compile_commands.json
+
+.vscode
+notes.md
+ext/
