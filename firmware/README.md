@@ -45,6 +45,21 @@ Note: to use a nRF52 DK as flashing device:
 west flash
 ```
 
+### Connect to RTT
+
+Note: this requires the SEGGER JLink RTT Logger.
+
+```bash
+/Applications/SEGGER/JLink/JLinkRTTLoggerExe \
+  -Device NRF52 \
+  -If SWD \
+  -Speed 4000 \
+  -RTTChannel 0 \
+  -LogFile \
+  -TimeStamp \
+  -Append
+```
+
 ### Display Pinout (ST7789V 240x240)
 
 **Pin mapping:**
@@ -68,6 +83,61 @@ This is the setup:
 - BME688 sensor connected via I2C
 - BSEC algorithm for IAQ (Indoor Air Quality) calculations
 - Forced mode: periodic sampling 3s and bsec library estimates Indoor Air Quality, CO2 and VOC levels
+
+### How BSEC sampling + calibration works (step-by-step)
+
+1) BSEC initialization
+
+   - `bsec_init()` creates the BSEC instance.
+   - `bsec_set_configuration()` loads the Bosch-provided config blob (defines the IAQ model and tuning).
+
+2) Restore previous calibration (optional but recommended)
+
+   - On boot, the firmware attempts to load a previously saved BSEC state blob from flash (Zephyr `settings`/NVS).
+   - If found, it calls `bsec_set_state()` to restore calibration/baseline so IAQ accuracy can recover faster.
+
+3) Subscribe to virtual sensors
+
+   - `bsec_update_subscription()` is used to request which virtual outputs you want (IAQ, CO2 equivalent, VOC equivalent, raw values, run-in/stabilization, etc.) and at what sample rate (LP in this firmware).
+   - BSEC responds with which physical sensor signals it requires.
+
+4) Ask BSEC what to do next
+
+   - Each loop iteration calls `bsec_sensor_control(timestamp_ns, &bme_settings)`.
+   - BSEC returns *when* the next sample should happen and *which* physical inputs must be provided for that timestamp.
+
+5) Trigger a measurement and read raw sensor signals
+
+   - When `bme_settings.trigger_measurement` is set, the firmware triggers a forced-mode measurement on the BME688 via the Zephyr driver.
+   - The firmware reads:
+     - temperature (°C)
+     - humidity (%RH)
+     - pressure (Pa)
+     - gas resistance (Ohm)
+
+6) Feed raw signals into BSEC
+
+   - The firmware builds a `bsec_input_t[]` array (only for the signals BSEC requested in `bme_settings.process_data`).
+   - It passes these inputs to `bsec_do_steps()`.
+
+7) Consume BSEC outputs
+
+   - `bsec_do_steps()` returns a list of virtual sensor outputs (IAQ, CO2 equivalent, VOC equivalent, heat-compensated temperature/humidity, etc.).
+   - Each output has an `accuracy` value:
+     - 0: stabilizing
+     - 1: low
+     - 2: medium
+     - 3: high
+
+8) Ongoing calibration (run-in + stabilization)
+
+   - Early after boot, BSEC is building a baseline; outputs can be noisy and the CO2/VOC equivalents may temporarily saturate.
+   - The firmware also prints BSEC run-in/stabilization status so you can see whether the algorithm considers the baseline “ready”.
+
+9) Periodically save BSEC state
+
+   - While running, the firmware periodically calls `bsec_get_state()` and saves the returned blob to flash.
+   - Restoring this blob on the next boot helps preserve long-term calibration progress.
 
 example output:
 

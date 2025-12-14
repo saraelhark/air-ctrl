@@ -3,6 +3,7 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/settings/settings.h>
 
 #include <errno.h>
 #include <string.h>
@@ -28,6 +29,68 @@ static uint8_t bsec_mem[BSEC_INSTANCE_SIZE] __aligned(4);
 static void *bsec_instance = NULL;
 
 static uint8_t bsec_work_buffer[BSEC_MAX_WORKBUFFER_SIZE] __aligned(4);
+
+#define BSEC_STATE_SAVE_INTERVAL_NS (5LL * 60LL * 1000000000LL)
+
+static uint8_t bsec_state_blob[BSEC_MAX_STATE_BLOB_SIZE] __aligned(4);
+static size_t bsec_state_blob_len;
+static bool bsec_state_blob_valid;
+static int64_t bsec_last_state_save_ns;
+
+static int bsec_settings_set(const char *name, size_t len, settings_read_cb read_cb, void *cb_arg)
+{
+	if (strcmp(name, "state") == 0) {
+		if (len > sizeof(bsec_state_blob)) {
+			return -EINVAL;
+		}
+
+		ssize_t rc = read_cb(cb_arg, bsec_state_blob, len);
+		if (rc < 0) {
+			return (int)rc;
+		}
+
+		bsec_state_blob_len = (size_t)rc;
+		bsec_state_blob_valid = true;
+		return 0;
+	}
+
+	return -ENOENT;
+}
+
+static struct settings_handler bsec_settings_handler = {
+	.name = "air_ctrl/bsec",
+	.h_set = bsec_settings_set,
+};
+
+static void bsec_state_save_if_needed(int64_t timestamp_ns)
+{
+	if (!IS_ENABLED(CONFIG_SETTINGS)) {
+		return;
+	}
+
+	if (timestamp_ns < (bsec_last_state_save_ns + BSEC_STATE_SAVE_INTERVAL_NS)) {
+		return;
+	}
+
+	uint32_t state_len = 0;
+	memset(bsec_work_buffer, 0, sizeof(bsec_work_buffer));
+	bsec_library_return_t bsec_status = bsec_get_state(bsec_instance, 0, bsec_state_blob,
+						   sizeof(bsec_state_blob), bsec_work_buffer,
+						   sizeof(bsec_work_buffer), &state_len);
+	if (bsec_status != BSEC_OK) {
+		LOG_ERR("bsec_get_state failed: %d", bsec_status);
+		return;
+	}
+
+	int err = settings_save_one("air_ctrl/bsec/state", bsec_state_blob, state_len);
+	if (err) {
+		LOG_ERR("Failed to save BSEC state (err %d)", err);
+		return;
+	}
+
+	bsec_last_state_save_ns = timestamp_ns;
+	LOG_INF("Saved BSEC state (%u bytes)", state_len);
+}
 
 static bsec_sensor_configuration_t virtual_sensors[] = {
 	{BSEC_SAMPLE_RATE_LP, BSEC_OUTPUT_IAQ},
@@ -228,6 +291,7 @@ int air_ctrl_sensor_init(void)
 	bsec_version_t version;
 	bsec_sensor_configuration_t required_sensors[BSEC_MAX_PHYSICAL_SENSOR];
 	uint8_t n_required = BSEC_MAX_PHYSICAL_SENSOR;
+	int err;
 
 	LOG_INF("Initializing BSEC integration...");
 
@@ -257,6 +321,31 @@ int air_ctrl_sensor_init(void)
 		return -EIO;
 	}
 
+	if (IS_ENABLED(CONFIG_SETTINGS)) {
+		err = settings_register(&bsec_settings_handler);
+		if (err) {
+			LOG_ERR("settings_register failed (err %d)", err);
+		} else {
+			bsec_state_blob_valid = false;
+			bsec_state_blob_len = 0;
+			err = settings_load_subtree("air_ctrl/bsec");
+			if (err) {
+				LOG_ERR("settings_load_subtree failed (err %d)", err);
+			}
+
+			if (bsec_state_blob_valid && bsec_state_blob_len > 0) {
+				memset(bsec_work_buffer, 0, sizeof(bsec_work_buffer));
+				bsec_status = bsec_set_state(bsec_instance, bsec_state_blob, bsec_state_blob_len,
+							     bsec_work_buffer, sizeof(bsec_work_buffer));
+				if (bsec_status != BSEC_OK) {
+					LOG_ERR("bsec_set_state failed: %d", bsec_status);
+				} else {
+					LOG_INF("Restored BSEC state (%u bytes)", (uint32_t)bsec_state_blob_len);
+				}
+			}
+		}
+	}
+
 	bsec_status = bsec_update_subscription(bsec_instance, virtual_sensors, NUM_VIRTUAL_SENSORS,
 					 required_sensors, &n_required);
 	if (bsec_status != BSEC_OK) {
@@ -267,6 +356,7 @@ int air_ctrl_sensor_init(void)
 		n_required);
 
 	memset(&bme_settings, 0, sizeof(bme_settings));
+	bsec_last_state_save_ns = air_ctrl_sensor_get_timestamp_ns();
 
 	LOG_INF("BSEC integration initialized successfully");
 
@@ -304,7 +394,11 @@ bool air_ctrl_sensor_run(air_ctrl_sensor_data_t *output)
 	}
 
 	if (bme_settings.trigger_measurement) {
-		return measure_and_process(output);
+		bool ok = measure_and_process(output);
+		if (ok) {
+			bsec_state_save_if_needed(timestamp_ns);
+		}
+		return ok;
 	}
 
 	return false;

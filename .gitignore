@@ -42,3 +42,4 @@ fp-info-cache
 hardware/production/*
 
 .vscode
+firmware/-LogFile
