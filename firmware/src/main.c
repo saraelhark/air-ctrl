@@ -58,11 +58,13 @@ int main(void)
 			);
 			#else
 			LOG_INF("=== BME688 Raw Data ===");
-			LOG_INF("  Temperature: %.2f °C", sensor_data.raw_temperature);
+			LOG_INF("  Temperature: %.2f \u00b0C", sensor_data.raw_temperature);
 			LOG_INF("  Humidity: %.2f %%RH", sensor_data.raw_humidity);
 			LOG_INF("  Pressure: %.2f hPa", sensor_data.raw_pressure / 100.0);
 			LOG_INF("  Gas Resistance: %.0f Ohm", sensor_data.raw_gas_resistance);
 			#endif
+
+			(void)air_ctrl_bt_notify_sensor_data(&sensor_data);
 		}
 
 		k_sleep(K_MSEC(100));
