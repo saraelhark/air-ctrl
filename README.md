@@ -1,4 +1,5 @@
 # air-ctrl
+
 Air quality wrist band
 
 ## Features
@@ -14,5 +15,10 @@ Air quality wrist band
 [datasheets](docs/datasheets.md)
 
 ## Constraints
+
 - size: 35x35mm
 - low power consumption
+
+## Firmware
+
+To setup, build and flash the firmware, see [firmware/README.md](firmware/README.md)

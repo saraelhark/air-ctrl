@@ -7,21 +7,6 @@
 
 LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
-#if IS_ENABLED(CONFIG_AIR_CTRL_USE_BSEC)
-static void print_iaq_accuracy(uint8_t accuracy)
-{
-	const char *acc_str;
-	switch (accuracy) {
-	case 0: acc_str = "Stabilizing"; break;
-	case 1: acc_str = "Low"; break;
-	case 2: acc_str = "Medium"; break;
-	case 3: acc_str = "High"; break;
-	default: acc_str = "Unknown"; break;
-	}
-	LOG_INF("  IAQ Accuracy: %s (%d)", acc_str, accuracy);
-}
-#endif
-
 int main(void)
 {
 	int err;
@@ -50,35 +35,27 @@ int main(void)
 	while (true) {
 		if (air_ctrl_sensor_run(&sensor_data)) {
 			#if IS_ENABLED(CONFIG_AIR_CTRL_USE_BSEC)
-			LOG_INF("=== BME688 BSEC Data ===");
-			
-			LOG_INF("  Temperature: %.2f °C (raw: %.2f °C)",
+			LOG_INF(
+				"ts_ns,temp_raw_c,temp_comp_c,hum_raw_rh,hum_comp_rh,press_raw_pa,gas_raw_ohm,iaq,iaq_acc,static_iaq,co2_eq_ppm,breath_voc_eq_ppm,gas_pct,stabilized,run_in"
+			);
+			LOG_INF(
+				"%lld,%.2f,%.2f,%.2f,%.2f,%.0f,%.0f,%.1f,%u,%.1f,%.0f,%.3f,%.1f,%u,%u",
+				(long long)sensor_data.timestamp_ns,
+				sensor_data.raw_temperature,
 				sensor_data.temperature,
-				sensor_data.raw_temperature);
-			LOG_INF("  Humidity: %.2f %%RH (raw: %.2f %%RH)",
+				sensor_data.raw_humidity,
 				sensor_data.humidity,
-				sensor_data.raw_humidity);
-			
-			LOG_INF("  Pressure: %.2f hPa",
-				sensor_data.raw_pressure / 100.0);
-			
-			LOG_INF("  Gas Resistance: %.0f Ohm",
-				sensor_data.raw_gas_resistance);
-			
-			LOG_INF("  IAQ: %.1f", sensor_data.iaq);
-			print_iaq_accuracy(sensor_data.iaq_accuracy);
-			LOG_INF("  Static IAQ: %.1f", sensor_data.static_iaq);
-			
-			LOG_INF("  CO2 Equivalent: %.0f ppm",
-				sensor_data.co2_equivalent);
-			LOG_INF("  Breath VOC: %.3f ppm",
-				sensor_data.breath_voc_equivalent);
-			LOG_INF("  Gas Percentage: %.1f %%",
-				sensor_data.gas_percentage);
-			
-			LOG_INF("  Stabilization: %s, Run-in: %s",
-				sensor_data.stabilization_status > 0.5f ? "Done" : "Ongoing",
-				sensor_data.run_in_status > 0.5f ? "Done" : "Ongoing");
+				sensor_data.raw_pressure,
+				sensor_data.raw_gas_resistance,
+				sensor_data.iaq,
+				sensor_data.iaq_accuracy,
+				sensor_data.static_iaq,
+				sensor_data.co2_equivalent,
+				sensor_data.breath_voc_equivalent,
+				sensor_data.gas_percentage,
+				sensor_data.stabilization_status > 0.5f ? 1U : 0U,
+				sensor_data.run_in_status > 0.5f ? 1U : 0U
+			);
 			#else
 			LOG_INF("=== BME688 Raw Data ===");
 			LOG_INF("  Temperature: %.2f °C", sensor_data.raw_temperature);

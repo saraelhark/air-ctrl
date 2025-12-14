@@ -18,12 +18,47 @@ west init -l .
 west update
 ```
 
+To make the gas sensing part of the sensor work I had to edit the Zephyr driver for the BME680 (compatible with BME688) since the Bosch driver did not work (humidity and pressure compensation gave physical readings out of bounds) to make it use the heating profile for the sensor. Apply local Zephyr patches:
+
+```bash
+git -C zephyr apply --check ../patches/zephyr-bme680.patch
+git -C zephyr apply ../patches/zephyr-bme680.patch
+```
+
+Note: the patch modifies files under `zephyr/` (which is not tracked by this repo). If you run `west update` later and it complains about local modifications in the `zephyr` project, you can revert the patch before updating and apply it again afterwards:
+
+```bash
+git -C zephyr apply -R ../patches/zephyr-bme680.patch
+west update
+git -C zephyr apply ../patches/zephyr-bme680.patch
+```
+
 Optional (useful for IDE integration and direct CMake builds):
 
 ```bash
 west zephyr-export
 source zephyr/zephyr-env.sh
 ```
+
+## Important
+
+The BSEC library is closed source and you need to register and accept the agreement to download it from Bosch Sensortec's website [version 3.2.1.0](https://www.bosch-sensortec.com/software-tools/double-opt-in-forms/bsec-software-3-2-1-0-form.html).
+
+By default, the firmware builds without BSEC and prints raw sensor values.
+
+`ext/` is ignored and not fetched by west.
+
+To enable BSEC:
+
+1) Download the archive and extract it in a local folder called `ext/`.
+2) Build with the BSEC overlay config:
+
+```bash
+west build -b air_ctrl --pristine -- -DOVERLAY_CONFIG=prj_bsec.conf
+```
+
+Example expected library path:
+`/ext/algo/bsec_IAQ_Sel/bin/gcc/Cortex_M4F/libalgobsec.a`
 
 ## Build
 
@@ -157,28 +192,12 @@ example output:
 <dbg> bsec: process_data: BSEC inputs: n=5 T=22.40 H=37.77 P=101329 Gas=12858838
 ```
 
+Here is an example of live data:
+
+![live-plot](logging/live-data.png)
+
 ### Notes
 
 - using the zephyr driver makes things work but it hardcodes the heating profile for the sensor
 - the sensor library (bsec) calibrates over time, so it needs to be left running for a while to stabilize
 - the sensor library (bsec) has support to store the configuration to flash to be able to load it at the next boot and not lose the stabilization/calibration efforts
-
-## Important
-
-The BSEC library is closed source and you need to register and accept the agreement to download it from Bosch Sensortec's website [version 3.2.1.0](https://www.bosch-sensortec.com/software-tools/double-opt-in-forms/bsec-software-3-2-1-0-form.html).
-
-By default, the firmware builds without BSEC and prints raw sensor values.
-
-`ext/` is ignored and not fetched by west.
-
-To enable BSEC:
-
-1) Download the archive and extract it in a local folder called `ext/`.
-2) Build with the BSEC overlay config:
-
-```bash
-west build -b air_ctrl --pristine -- -DOVERLAY_CONFIG=prj_bsec.conf
-```
-
-Example expected library path:
-`/ext/algo/bsec_IAQ_Sel/bin/gcc/Cortex_M4F/libalgobsec.a`

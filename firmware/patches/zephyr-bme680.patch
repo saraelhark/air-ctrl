@@ -1,0 +1,208 @@
+diff --git a/drivers/sensor/bosch/bme680/bme680.c b/drivers/sensor/bosch/bme680/bme680.c
+index 7c96e46a73c..261eb0f8fb8 100644
+--- a/drivers/sensor/bosch/bme680/bme680.c
++++ b/drivers/sensor/bosch/bme680/bme680.c
+@@ -24,13 +24,54 @@
+ 
+ LOG_MODULE_REGISTER(bme680, CONFIG_SENSOR_LOG_LEVEL);
+ 
+-struct bme_data_regs {
+-	uint8_t pressure[3];
+-	uint8_t temperature[3];
+-	uint8_t humidity[2];
+-	uint8_t padding[3];
+-	uint8_t gas[2];
+-} __packed;
++
++#define BME680_FIELD0_LEN 15
++#define BME680_FIELD0_GAS_INDEX_L 11
++#define BME68X_FIELD0_GAS_INDEX_H 13
++
++#define BME68X_MSK_HCTRL 0x08
++#define BME68X_MSK_NBCONV 0x0f
++#define BME68X_MSK_RUN_GAS 0x30
++#define BME68X_POS_RUN_GAS 4
++
++static inline int bme680_reg_read(const struct device *dev,
++				  uint8_t start, void *buf, int size);
++static inline int bme680_reg_write(const struct device *dev, uint8_t reg,
++				   uint8_t val);
++
++static int bme680_enable_gas_measurement(const struct device *dev)
++{
++	struct bme680_data *data = dev->data;
++	uint8_t ctrl_gas_0;
++	uint8_t ctrl_gas_1;
++	uint8_t run_gas;
++	int ret;
++
++	ret = bme680_reg_read(dev, BME680_REG_CTRL_GAS_0, &ctrl_gas_0, 1);
++	if (ret < 0) {
++		return ret;
++	}
++
++	ret = bme680_reg_read(dev, BME680_REG_CTRL_GAS_1, &ctrl_gas_1, 1);
++	if (ret < 0) {
++		return ret;
++	}
++
++	/* HCTRL=0 enables heater, HCTRL=1 disables heater */
++	ctrl_gas_0 = (ctrl_gas_0 & ~BME68X_MSK_HCTRL);
++	ctrl_gas_1 = (ctrl_gas_1 & ~BME68X_MSK_NBCONV);
++
++	run_gas = (data->variant_id == 0x01) ? 2 : 1;
++	ctrl_gas_1 = (ctrl_gas_1 & ~BME68X_MSK_RUN_GAS) |
++		    ((run_gas << BME68X_POS_RUN_GAS) & BME68X_MSK_RUN_GAS);
++
++	ret = bme680_reg_write(dev, BME680_REG_CTRL_GAS_0, ctrl_gas_0);
++	if (ret < 0) {
++		return ret;
++	}
++
++	return bme680_reg_write(dev, BME680_REG_CTRL_GAS_1, ctrl_gas_1);
++}
+ 
+ #if BME680_BUS_SPI
+ static inline bool bme680_is_on_spi(const struct device *dev)
+@@ -150,6 +191,25 @@ static void bme680_calc_humidity(struct bme680_data *data, uint16_t adc_humidity
+ static void bme680_calc_gas_resistance(struct bme680_data *data, uint8_t gas_range,
+ 				       uint16_t adc_gas_res)
+ {
++	if (data->variant_id == 0x01) {
++		uint32_t var1;
++		int32_t var2;
++		uint64_t gas_res;
++
++		var1 = 262144U >> gas_range;
++		var2 = (int32_t)adc_gas_res - 512;
++		var2 *= 3;
++		var2 = 4096 + var2;
++		if (var2 <= 0) {
++			var2 = 1;
++		}
++
++		gas_res = (10000ULL * var1) / (uint32_t)var2;
++		gas_res *= 100ULL;
++		data->calc_gas_resistance = (uint32_t)gas_res;
++		return;
++	}
++
+ 	int64_t var1, var3;
+ 	uint64_t var2;
+ 
+@@ -177,7 +237,7 @@ static uint8_t bme680_calc_res_heat(struct bme680_data *data, uint16_t heatr_tem
+ 	uint8_t heatr_res;
+ 	int32_t var1, var2, var3, var4, var5;
+ 	int32_t heatr_res_x100;
+-	int32_t amb_temp = 25;    /* Assume ambient temperature to be 25 deg C */
++	int32_t amb_temp = 22;    /* Assume ambient temperature to be 22 deg C */
+ 
+ 	if (heatr_temp > 400) { /* Cap temperature */
+ 		heatr_temp = 400;
+@@ -219,16 +279,34 @@ static int bme680_sample_fetch(const struct device *dev,
+ 			       enum sensor_channel chan)
+ {
+ 	struct bme680_data *data = dev->data;
+-	struct bme_data_regs data_regs;
++	uint8_t field_data[BME680_FIELD0_LEN];
+ 	uint8_t gas_range;
+ 	uint32_t adc_temp, adc_press;
+ 	uint16_t adc_hum, adc_gas_res;
+ 	uint8_t status;
++	uint8_t gas_index;
+ 	int cnt = 0;
+ 	int ret;
+ 
+ 	__ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL);
+ 
++	ret = bme680_enable_gas_measurement(dev);
++	if (ret < 0) {
++		return ret;
++	}
++
++	ret = bme680_reg_write(dev, BME680_REG_RES_HEAT0,
++			       bme680_calc_res_heat(data, BME680_HEATR_TEMP));
++	if (ret < 0) {
++		return ret;
++	}
++
++	ret = bme680_reg_write(dev, BME680_REG_GAS_WAIT0,
++			       bme680_calc_gas_wait(BME680_HEATR_DUR_MS));
++	if (ret < 0) {
++		return ret;
++	}
++
+ 	/* Trigger the measurement */
+ 	ret = bme680_reg_write(dev, BME680_REG_CTRL_MEAS, BME680_CTRL_MEAS_VAL);
+ 	if (ret < 0) {
+@@ -251,17 +329,22 @@ static int bme680_sample_fetch(const struct device *dev,
+ 	} while (!(status & BME680_MSK_NEW_DATA));
+ 	LOG_DBG("New data after %d ms", cnt);
+ 
+-	ret = bme680_reg_read(dev, BME680_REG_FIELD0, &data_regs, sizeof(data_regs));
++	ret = bme680_reg_read(dev, BME680_REG_FIELD0, field_data, sizeof(field_data));
+ 	if (ret < 0) {
+ 		return ret;
+ 	}
+ 
+-	adc_press = sys_get_be24(data_regs.pressure) >> 4;
+-	adc_temp = sys_get_be24(data_regs.temperature) >> 4;
+-	adc_hum = sys_get_be16(data_regs.humidity);
+-	adc_gas_res = sys_get_be16(data_regs.gas) >> 6;
+-	data->heatr_stab = data_regs.gas[1] & BME680_MSK_HEATR_STAB;
+-	gas_range = data_regs.gas[1] & BME680_MSK_GAS_RANGE;
++	adc_press = sys_get_be24(&field_data[0]) >> 4;
++	adc_temp = sys_get_be24(&field_data[3]) >> 4;
++	adc_hum = sys_get_be16(&field_data[6]);
++
++	gas_index = (data->variant_id == 0x01) ? BME68X_FIELD0_GAS_INDEX_H : BME680_FIELD0_GAS_INDEX_L;
++	adc_gas_res = sys_get_be16(&field_data[gas_index]) >> 6;
++	data->heatr_stab = field_data[gas_index + 1] & BME680_MSK_HEATR_STAB;
++	gas_range = field_data[gas_index + 1] & BME680_MSK_GAS_RANGE;
++
++	LOG_DBG("Gas raw adc=%u range=%u stab=%u variant=0x%02x", adc_gas_res, gas_range,
++		data->heatr_stab ? 1 : 0, data->variant_id);
+ 
+ 	bme680_calc_temp(data, adc_temp);
+ 	bme680_calc_press(data, adc_press);
+@@ -406,6 +489,11 @@ static int bme680_power_up(const struct device *dev)
+ 		return err;
+ 	}
+ 
++	err = bme680_reg_read(dev, BME68X_REG_VARIANT, &data->variant_id, 1);
++	if (err < 0) {
++		data->variant_id = 0;
++	}
++
+ 	if (data->chip_id == BME680_CHIP_ID) {
+ 		LOG_DBG("BME680 chip detected");
+ 	} else {
+@@ -428,7 +516,7 @@ static int bme680_power_up(const struct device *dev)
+ 		return err;
+ 	}
+ 
+-	err = bme680_reg_write(dev, BME680_REG_CTRL_GAS_1, BME680_CTRL_GAS_1_VAL);
++	err = bme680_enable_gas_measurement(dev);
+ 	if (err < 0) {
+ 		return err;
+ 	}
+diff --git a/drivers/sensor/bosch/bme680/bme680.h b/drivers/sensor/bosch/bme680/bme680.h
+index 6a4a4aef52b..f9a4c06539f 100644
+--- a/drivers/sensor/bosch/bme680/bme680.h
++++ b/drivers/sensor/bosch/bme680/bme680.h
+@@ -80,6 +80,7 @@ struct bme680_config {
+ #define BME680_REG_COEFF2               0xe1
+ #define BME680_REG_CHIP_ID		0xd0
+ #define BME680_REG_SOFT_RESET           0xe0
++#define BME68X_REG_VARIANT              0xf0
+ 
+ #define BME680_MSK_NEW_DATA             0x80
+ #define BME680_MSK_GAS_RANGE            0x0f
+@@ -211,6 +212,7 @@ struct bme680_data {
+ 	int32_t t_fine;
+ 
+ 	uint8_t chip_id;
++	uint8_t variant_id;
+ 
+ #if BME680_BUS_SPI
+ 	uint8_t mem_page;

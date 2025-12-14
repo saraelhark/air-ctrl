@@ -13,7 +13,7 @@
 #include "bsec_datatypes.h"
 #include "bsec_selectivity.h"
 
-LOG_MODULE_REGISTER(air_ctrl_sensor_bsec, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(air_ctrl_sensor_bsec, LOG_LEVEL_INF);
 
 #define BSEC_INSTANCE_SIZE 3272
 
